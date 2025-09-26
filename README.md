@@ -4,6 +4,12 @@ Containerization of lldpd for OpenShift.
 
 **Goal**: The goal of this document is to containerize lldpd so we can run it as a container in an OpenShift environment and do device discovery on the network.
 
+This document is broken down into three sections:
+
+- [Building The Container](#buildingthecontainer)
+- [Running the Container as Daemonset](#runningthecontainerasdaemonset)
+- [Using the Container for lldp Troubleshooting](#usingthecontainerforlldptroubleshooting)
+
 ## Building The Container
 
 The first step is to make a lldp directory.
@@ -36,7 +42,7 @@ EOF
 Now that we have our Dockerfile and lldpd.conf we can build the image.
 
 ~~~bash
-$ podman build -t quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.1 -f Dockerfile 
+$ podman build -t quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.2 -f Dockerfile 
 STEP 1/4: FROM registry.access.redhat.com/ubi9/ubi:latest
 STEP 2/4: COPY lldpd.conf /etc/lldpd.conf
 --> Using cache c75885685cd29c566a8132f28a007bbb26869e65b07bb0c9c3eed5b212b4bd2a
@@ -110,13 +116,17 @@ Installed:
 Complete!
 --> 07eeb7a24fa5
 STEP 4/4: ENTRYPOINT ["lldpd", "-dd", "-l"]
-COMMIT quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.1
---> 8067ca8b6ebb
-Successfully tagged quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.1
-8067ca8b6ebbb011158ad8ba95648448321e812205629075455cf203c3b8a2e4
+COMMIT quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.2
+--> d397bfab9139
+Successfully tagged quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.2
+d397bfab91397214203ae4b8d47dc5947283ace9c78008e7c8437b2f66490a80
 ~~~
 
+Now that we have built our image and pushed it to a registry we can move onto running the daemonset in our environment.
+
 ## Running the Container as Daemonset
+
+To run our lldpd container daemonset we will need to provide a service account with privilege access similar to what we do with NMState.   The first step is to create a service account we will simply call lldp.  In this example I am creating it under the nvidia-network-operator namespace.  First craft the custom resource file.
 
 ~~~bash
 $ cat <<EOF > lldp-serviceaccount.yaml
@@ -128,15 +138,21 @@ metadata:
 EOF
 ~~~
 
+Then use the custom resource file to create the service account on the cluster.
+
 ~~~bash
 $ oc create -f lldp-serviceaccount.yaml 
 serviceaccount/lldp created
 ~~~
 
+Once the service account is created we can apply the privileges to it.
+
 ~~~bash
 $ oc -n nvidia-network-operator adm policy add-scc-to-user privileged -z lldp
 clusterrole.rbac.authorization.k8s.io/system:openshift:scc:privileged added: "lldp"
 ~~~
+
+With our service account created and given the permissision it needs we can now focus on creating our lldpd daemonset.   This daemonset will live in the nvidia-network-operator namespace as well.  Further in this example I am assiging a secondary resource to enable a secondary interface that is connected to the Spectrum-X switch.  That way we can demonsrate the sending and recieving of lldp packets.  Create the below custom resource file and modify as necessary for the environment.
 
 ~~~bash
 $ cat <<EOF > lldpd-daemonset.yaml 
@@ -161,7 +177,7 @@ spec:
       serviceAccountName: lldp
       containers:
         - name: lldpd-container
-          image: quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.1
+          image: quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.2
           securityContext:
             privileged: true
             capabilities:
@@ -174,6 +190,22 @@ spec:
               #nvidia.com/gpu: 1
               rdma/rdma_shared_device_eth: 1
 EOF
+~~~
+
+Once we have created the daemonset custom resource file we can create it on the cluster.
+
+~~~bash
+$ oc create -f lldpd-daemonset.yaml 
+daemonset.apps/lldpd-container created
+~~~
+
+We can validate it is running by looking at the pods in the nvidia-network-operator namespace.
+
+~~~bash
+1$ oc get pods -n nvidia-network-operator -l app=lldpd -o wide
+NAME                    READY   STATUS    RESTARTS   AGE   IP             NODE                                       NOMINATED NODE   READINESS GATES
+lldpd-container-gcx6j   1/1     Running   0          13m   10.128.3.149   nvd-srv-29.nvidia.eng.rdu2.dc.redhat.com   <none>           <none>
+lldpd-container-lwn7f   1/1     Running   0          13m   10.131.0.65    nvd-srv-30.nvidia.eng.rdu2.dc.redhat.com   <none>           <none>
 ~~~
 
 ## Using the Container for lldp Troubleshooting
