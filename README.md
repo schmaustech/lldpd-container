@@ -6,9 +6,9 @@ Containerization of lldpd for OpenShift.
 
 ## Workflow Sections
 
-- [Building The Container](#buildingthecontainer)
-- [Running the Container as Daemonset](#runningthecontainerasdaemonset)
-- [Using the Container for lldp Troubleshooting](#usingthecontainerforlldptroubleshooting)
+- [Building The Container](#building-the-container)
+- [Running the Container as Daemonset](#running-the-container-as-daemonset)
+- [Using the Container for lldp Troubleshooting](#using-the-container-for-lldp-troubleshooting)
 
 ## Building The Container
 
