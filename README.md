@@ -115,3 +115,7 @@ COMMIT quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.1
 Successfully tagged quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.1
 8067ca8b6ebbb011158ad8ba95648448321e812205629075455cf203c3b8a2e4
 ~~~
+
+## Running the Container as Daemonset
+
+## Using the Container for lldp Troubleshooting
