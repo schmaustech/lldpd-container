@@ -118,4 +118,62 @@ Successfully tagged quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.1
 
 ## Running the Container as Daemonset
 
+~~~bash
+$ cat <<EOF > lldp-serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: lldp
+  namespace: nvidia-network-operator
+EOF
+~~~
+
+~~~bash
+$ oc create -f lldp-serviceaccount.yaml 
+serviceaccount/lldp created
+~~~
+
+~~~bash
+$ oc -n nvidia-network-operator adm policy add-scc-to-user privileged -z lldp
+clusterrole.rbac.authorization.k8s.io/system:openshift:scc:privileged added: "lldp"
+~~~
+
+~~~bash
+$ cat <<EOF > lldpd-daemonset.yaml 
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: lldpd-container
+  namespace: nvidia-network-operator
+  labels:
+    app: lldpd
+spec:
+  selector:
+    matchLabels:
+      app: lldpd
+  template:
+    metadata:
+      labels:
+        app: lldpd
+      annotations:
+        k8s.v1.cni.cncf.io/networks: rdmashared-net
+    spec:
+      serviceAccountName: lldp
+      containers:
+        - name: lldpd-container
+          image: quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.1
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["IPC_LOCK"]
+          resources:
+            limits:
+              #nvidia.com/gpu: 1
+              rdma/rdma_shared_device_eth: 1
+            requests:
+              #nvidia.com/gpu: 1
+              rdma/rdma_shared_device_eth: 1
+EOF
+~~~
+
 ## Using the Container for lldp Troubleshooting
