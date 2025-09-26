@@ -229,16 +229,18 @@ First let't gather the list of our containers.
 ~~~bash
 $ oc get pods -n nvidia-network-operator -l app=lldpd -o wide
 NAME                    READY   STATUS    RESTARTS   AGE   IP             NODE                                       NOMINATED NODE   READINESS GATES
-lldpd-container-gcx6j   1/1     Running   0          27m   10.128.3.149   nvd-srv-29.nvidia.eng.rdu2.dc.redhat.com   <none>           <none>
-lldpd-container-lwn7f   1/1     Running   0          27m   10.131.0.65    nvd-srv-30.nvidia.eng.rdu2.dc.redhat.com   <none>           <none>
+lldpd-container-4lbrt   1/1     Running   0          97m   10.131.0.68    nvd-srv-30.nvidia.eng.rdu2.dc.redhat.com   <none>           <none>
+lldpd-container-thxvv   1/1     Running   0          97m   10.128.3.153   nvd-srv-29.nvidia.eng.rdu2.dc.redhat.com   <none>           <none>
 ~~~
 
 Next let's rsh into one of the them.
 
 ~~~bash
-$ oc rsh -n nvidia-network-operator lldpd-container-gcx6j
+$ oc rsh -n nvidia-network-operator lldpd-container-4lbrt
 sh-5.1# 
 ~~~
+
+Once inside the container we can list out the processes and see that lldpd is running.
 
 ~~~bash
 sh-5.1# ps -ef
@@ -248,6 +250,8 @@ lldpd          3       1  0 18:45 ?        00:00:00 lldpd -dd -l
 root           4       0  0 18:46 pts/0    00:00:00 /bin/sh
 root           7       4  0 18:50 pts/0    00:00:00 ps -ef
 ~~~
+
+We can use the lldpcli utlity to show the configuration of lldpd.
 
 ~~~bash
 sh-5.1# lldpcli show conf
@@ -280,6 +284,8 @@ Configuration:
   Agent type:   unknown
 -------------------------------------------------------------------------------
 ~~~
+
+We can use the lldpcli utlity to show the interfaces lldpd is using.
 
 ~~~bash
 sh-5.1# lldpcli show int
@@ -326,6 +332,8 @@ Interface:    net1
 -------------------------------------------------------------------------------
 ~~~
 
+We can use the lldpcli utlity to show the statistics of each interface.
+
 ~~~bash
 sh-5.1# lldpcli show stat
 -------------------------------------------------------------------------------
@@ -350,6 +358,8 @@ Interface:    net1
   Deleted:      0
 -------------------------------------------------------------------------------
 ~~~
+
+We can use the lldpcli utlity to show the neighbors.
 
 ~~~bash
 sh-5.1# lldpcli show nei 
@@ -379,12 +389,16 @@ Interface:    net1, via: LLDP, RID: 1, Time: 0 day, 01:22:55
 -------------------------------------------------------------------------------
 ~~~
 
+Let's login to the Spectrum SN5600 switch.
+
 ~~~bash
 $ ssh cumulus@nvd-sn5600-bmc.mgmt.nvidia.eng.rdu2.dc.redhat.com
 Debian GNU/Linux 12
 Linux cumulus 6.1.0-cl-1-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.38-4+cl5.9.0u64 (2024-04-21) x86_64
 Last login: Fri Sep 26 21:28:00 2025 from 10.22.66.108
 ~~~
+
+On the switch we can run lldpctl and we can see which ports have lldp data.  Note our two containers show up.
 
 ~~~bash
 cumulus@cumulus:mgmt:~$ sudo lldpctl | egrep 'Inter|Port|SysName'
@@ -422,4 +436,4 @@ Interface:    swp17s1, via: LLDP, RID: 6, Time: 0 day, 01:38:33
     PortID:       mac c4:70:bd:c2:c1:79
 ~~~
 
-
+Hopefully this gives an idea of how this container can be useful.
