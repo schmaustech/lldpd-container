@@ -8,7 +8,7 @@ Containerization of lldpd for OpenShift.
 
 - [Building The Container](#building-the-container)
 - [Running the Container as Daemonset](#running-the-container-as-daemonset)
-- [Using the Container for lldp Troubleshooting](#using-the-container-for-lldp-troubleshooting)
+- [Using the lldp Container](#using-the-lldp-container)
 
 ## Building The Container
 
@@ -122,6 +122,18 @@ Successfully tagged quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.2
 d397bfab91397214203ae4b8d47dc5947283ace9c78008e7c8437b2f66490a80
 ~~~
 
+Then push the newly built image to a registry.
+
+~~~bash
+$ podman push quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.2
+Getting image source signatures
+Copying blob 0c70878782cc done   | 
+Copying blob e1a406a53f5b skipped: already exists  
+Copying blob a31fe918a805 skipped: already exists  
+Copying config d397bfab91 done   | 
+Writing manifest to image destination
+~~~
+
 Now that we have built our image and pushed it to a registry we can move onto running the daemonset in our environment.
 
 ## Running the Container as Daemonset
@@ -208,4 +220,206 @@ lldpd-container-gcx6j   1/1     Running   0          13m   10.128.3.149   nvd-sr
 lldpd-container-lwn7f   1/1     Running   0          13m   10.131.0.65    nvd-srv-30.nvidia.eng.rdu2.dc.redhat.com   <none>           <none>
 ~~~
 
-## Using the Container for lldp Troubleshooting
+## Using the lldp Container
+
+Now that our daemonset for lldp has been launched we should be able to go into one of the containers and run some lldp commands.
+
+First let't gather the list of our containers.
+
+~~~bash
+$ oc get pods -n nvidia-network-operator -l app=lldpd -o wide
+NAME                    READY   STATUS    RESTARTS   AGE   IP             NODE                                       NOMINATED NODE   READINESS GATES
+lldpd-container-gcx6j   1/1     Running   0          27m   10.128.3.149   nvd-srv-29.nvidia.eng.rdu2.dc.redhat.com   <none>           <none>
+lldpd-container-lwn7f   1/1     Running   0          27m   10.131.0.65    nvd-srv-30.nvidia.eng.rdu2.dc.redhat.com   <none>           <none>
+~~~
+
+Next let's rsh into one of the them.
+
+~~~bash
+$ oc rsh -n nvidia-network-operator lldpd-container-gcx6j
+sh-5.1# 
+~~~
+
+~~~bash
+sh-5.1# ps -ef
+UID          PID    PPID  C STIME TTY          TIME CMD
+root           1       0  0 18:45 ?        00:00:00 lldpd -dd -l
+lldpd          3       1  0 18:45 ?        00:00:00 lldpd -dd -l
+root           4       0  0 18:46 pts/0    00:00:00 /bin/sh
+root           7       4  0 18:50 pts/0    00:00:00 ps -ef
+~~~
+
+~~~bash
+sh-5.1# lldpcli show conf
+-------------------------------------------------------------------------------
+Global configuration:
+-------------------------------------------------------------------------------
+Configuration:
+  Transmit delay: 30
+  Transmit delay in milliseconds: 30000
+  Transmit hold: 4
+  Maximum number of neighbors: 32
+  Receive mode: no
+  Pattern for management addresses: (none)
+  Interface pattern: (none)
+  Permanent interface pattern: (none)
+  Interface pattern for chassis ID: (none)
+  Override chassis ID with: (none)
+  Override description with: (none)
+  Override platform with: Linux
+  Override system name with: (none)
+  Override system capabilities: no
+  Advertise version: yes
+  Update interface descriptions: no
+  Promiscuous mode on managed interfaces: no
+  Disable LLDP-MED inventory: yes
+  LLDP-MED fast start mechanism: yes
+  LLDP-MED fast start interval: 1
+  Source MAC for LLDP frames on bond slaves: local
+  Port ID TLV subtype for LLDP frames: unknown
+  Agent type:   unknown
+-------------------------------------------------------------------------------
+~~~
+
+~~~bash
+sh-5.1# lldpcli show int
+-------------------------------------------------------------------------------
+LLDP interfaces:
+-------------------------------------------------------------------------------
+Interface:    eth0
+  Administrative status: RX and TX
+  Chassis:     
+    ChassisID:    mac 0a:58:0a:83:00:44
+    SysName:      lldpd-container-4lbrt
+    SysDescr:     Red Hat Enterprise Linux 9.6 (Plow) Linux 5.14.0-570.39.1.el9_6.x86_64 #1 SMP PREEMPT_DYNAMIC Sat Aug 23 04:30:05 EDT 2025 x86_64
+    MgmtIP:       10.131.0.68
+    MgmtIface:    2
+    MgmtIP:       fe80::858:aff:fe83:44
+    MgmtIface:    2
+    Capability:   Bridge, off
+    Capability:   Router, off
+    Capability:   Wlan, off
+    Capability:   Station, on
+  Port:        
+    PortID:       mac 0a:58:0a:83:00:44
+    PortDescr:    eth0
+  TTL:          120
+-------------------------------------------------------------------------------
+Interface:    net1
+  Administrative status: RX and TX
+  Chassis:     
+    ChassisID:    mac 0a:58:0a:83:00:44
+    SysName:      lldpd-container-4lbrt
+    SysDescr:     Red Hat Enterprise Linux 9.6 (Plow) Linux 5.14.0-570.39.1.el9_6.x86_64 #1 SMP PREEMPT_DYNAMIC Sat Aug 23 04:30:05 EDT 2025 x86_64
+    MgmtIP:       10.131.0.68
+    MgmtIface:    2
+    MgmtIP:       fe80::858:aff:fe83:44
+    MgmtIface:    2
+    Capability:   Bridge, off
+    Capability:   Router, off
+    Capability:   Wlan, off
+    Capability:   Station, on
+  Port:        
+    PortID:       mac a2:2e:29:11:c7:68
+    PortDescr:    net1
+  TTL:          120
+-------------------------------------------------------------------------------
+~~~
+
+~~~bash
+sh-5.1# lldpcli show stat
+-------------------------------------------------------------------------------
+LLDP statistics:
+-------------------------------------------------------------------------------
+Interface:    eth0
+  Transmitted:  168
+  Received:     0
+  Discarded:    0
+  Unrecognized: 0
+  Ageout:       0
+  Inserted:     0
+  Deleted:      0
+-------------------------------------------------------------------------------
+Interface:    net1
+  Transmitted:  172
+  Received:     50
+  Discarded:    0
+  Unrecognized: 4
+  Ageout:       0
+  Inserted:     1
+  Deleted:      0
+-------------------------------------------------------------------------------
+~~~
+
+~~~bash
+sh-5.1# lldpcli show nei 
+-------------------------------------------------------------------------------
+LLDP neighbors:
+-------------------------------------------------------------------------------
+Interface:    net1, via: LLDP, RID: 1, Time: 0 day, 01:22:55
+  Chassis:     
+    ChassisID:    mac 9c:63:c0:3a:23:f0
+    SysName:      cumulus
+    SysDescr:     Cumulus Linux version 5.9.0 running on Nvidia SN5600
+    MgmtIP:       10.6.156.1
+    MgmtIface:    1
+    MgmtIP:       2620:52:9:1688:9e63:c0ff:fe3a:23f0
+    MgmtIface:    2
+    Capability:   Bridge, on
+    Capability:   Router, on
+  Port:        
+    PortID:       ifname swp4s1
+    PortDescr:    swp4s1
+    TTL:          300
+  Unknown TLVs:
+    TLV:          OUI: 00,80,C2, SubType: 11, Len: 2 08,08
+    TLV:          OUI: 00,80,C2, SubType: 9, Len: 21 00,00,03,00,60,32,00,00,32,00,00,00,00,02,02,02,02,02,02,00,02
+    TLV:          OUI: 00,80,C2, SubType: 10, Len: 21 00,00,03,00,60,32,00,00,32,00,00,00,00,02,02,02,02,02,02,00,02
+    TLV:          OUI: 00,80,C2, SubType: 12, Len: 4 00,63,12,B7
+-------------------------------------------------------------------------------
+~~~
+
+~~~bash
+$ ssh cumulus@nvd-sn5600-bmc.mgmt.nvidia.eng.rdu2.dc.redhat.com
+Debian GNU/Linux 12
+Linux cumulus 6.1.0-cl-1-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.38-4+cl5.9.0u64 (2024-04-21) x86_64
+Last login: Fri Sep 26 21:28:00 2025 from 10.22.66.108
+~~~
+
+~~~bash
+cumulus@cumulus:mgmt:~$ sudo lldpctl | egrep 'Inter|Port|SysName'
+Interface:    eth0, via: LLDP, RID: 4, Time: 0 day, 01:38:50
+    SysName:      sw01-access-f42.rdu3.redhat.com
+  Port:        
+    PortID:       ifname ge-0/0/47
+    PortDescr:    ge-0/0/47
+Interface:    swp65, via: LLDP, RID: 3, Time: 0 day, 01:38:50
+    SysName:      sw02-access-e42.rdu3.redhat.com
+  Port:        
+    PortID:       ifname xe-0/0/45
+    PortDescr:    link to sn5600
+Interface:    swp2s1, via: LLDP, RID: 11, Time: 0 day, 01:26:32
+    SysName:      lldpd-container-thxvv
+  Port:        
+    PortID:       mac 46:02:3e:14:b7:72
+    PortDescr:    net1
+Interface:    swp4s1, via: LLDP, RID: 12, Time: 0 day, 01:26:32
+    SysName:      lldpd-container-4lbrt
+  Port:        
+    PortID:       mac a2:2e:29:11:c7:68
+    PortDescr:    net1
+Interface:    swp16s0, via: LLDP, RID: 5, Time: 0 day, 01:38:49
+  Port:        
+    PortID:       mac c4:70:bd:c5:6f:79
+Interface:    swp16s1, via: LLDP, RID: 7, Time: 0 day, 01:38:33
+  Port:        
+    PortID:       mac c4:70:bd:c5:6f:78
+Interface:    swp17s0, via: LLDP, RID: 8, Time: 0 day, 01:38:21
+  Port:        
+    PortID:       mac c4:70:bd:c2:c1:78
+Interface:    swp17s1, via: LLDP, RID: 6, Time: 0 day, 01:38:33
+  Port:        
+    PortID:       mac c4:70:bd:c2:c1:79
+~~~
+
+
