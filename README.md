@@ -36,6 +36,7 @@ Then we need to create the lldpd.conf file that will get embedded in the contain
 $ cat <<EOF > lldpd.conf 
 configure lldp tx-interval 30
 configure lldp tx-hold 4
+configure lldp portidsubtype ifname
 EOF
 ~~~
 
