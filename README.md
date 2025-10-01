@@ -43,12 +43,18 @@ EOF
 Now that we have our Dockerfile and lldpd.conf we can build the image.
 
 ~~~bash
-$ podman build -t quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.5 -f Dockerfile 
-STEP 1/4: FROM registry.access.redhat.com/ubi9/ubi:latest
-STEP 2/4: COPY lldpd.conf /etc/lldpd.conf
---> Using cache c75885685cd29c566a8132f28a007bbb26869e65b07bb0c9c3eed5b212b4bd2a
---> c75885685cd2
-STEP 3/4: RUN dnf install -y lldpad lldpd tcpdump 
+$ ppodman build -t quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.5 -f Dockerfile 
+STEP 1/6: FROM registry.access.redhat.com/ubi9/ubi:latest
+STEP 2/6: COPY lldpd.conf /etc/lldpd.conf
+--> Using cache 1b1ed619ff75d4f4230524732252c1a074ad00f70f8d5976ad5dcde48f4c5397
+--> 1b1ed619ff75
+STEP 3/6: COPY entrypoint.sh /root/entrypoint.sh
+--> Using cache 177281a10d3207b4bc8f653423d7db20afc849e0c7a084ac76b79be6c5f6c604
+--> 177281a10d32
+STEP 4/6: RUN chmod +x /root/entrypoint.sh
+--> Using cache 37c85b784aafef1a5b109202e507457999fb681a9b3ae8682c767054fc2d3bc4
+--> 37c85b784aaf
+STEP 5/6: RUN dnf install -y lldpad lldpd tcpdump procps-ng pciutils
 Updating Subscription Management repositories.
 subscription-manager is operating in container mode.
 Red Hat Enterprise Linux 9 for x86_64 - BaseOS   10 MB/s |  79 MB     00:07    
@@ -115,12 +121,12 @@ Installed:
   tcpdump-14:4.99.0-9.el9.x86_64                                                
 
 Complete!
---> 07eeb7a24fa5
-STEP 4/4: ENTRYPOINT ["lldpd", "-dd", "-l"]
+--> 551ad3117cc0
+STEP 6/6: ENTRYPOINT ["/root/entrypoint.sh"]
 COMMIT quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.5
---> d397bfab9139
+--> 1cb95d923693
 Successfully tagged quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.5
-d397bfab91397214203ae4b8d47dc5947283ace9c78008e7c8437b2f66490a80
+1cb95d92369354bc8b9eff1bfb6e480b2ea67b4e5c3c9f24beb966eea7598c52
 ~~~
 
 Then push the newly built image to a registry.
@@ -128,10 +134,12 @@ Then push the newly built image to a registry.
 ~~~bash
 $ podman push quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.5
 Getting image source signatures
-Copying blob 0c70878782cc done   | 
-Copying blob e1a406a53f5b skipped: already exists  
+Copying blob b5e1756c65d6 done   | 
+Copying blob ed0f88307912 done   | 
+Copying blob 4f9e5bd3a426 done   | 
+Copying blob 54483677b5cb skipped: already exists  
 Copying blob a31fe918a805 skipped: already exists  
-Copying config d397bfab91 done   | 
+Copying config 1cb95d9236 done   | 
 Writing manifest to image destination
 ~~~
 
