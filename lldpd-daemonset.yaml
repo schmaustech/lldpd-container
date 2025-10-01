@@ -13,21 +13,13 @@ spec:
     metadata:
       labels:
         app: lldpd
-      annotations:
-        k8s.v1.cni.cncf.io/networks: rdmashared-net
     spec:
       serviceAccountName: lldp
+      hostNetwork: true
       containers:
         - name: lldpd-container
-          image: quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.1
+          image: quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.5
           securityContext:
             privileged: true
             capabilities:
               add: ["IPC_LOCK"]
-          resources:
-            limits:
-              #nvidia.com/gpu: 1
-              rdma/rdma_shared_device_eth: 1
-            requests:
-              #nvidia.com/gpu: 1
-              rdma/rdma_shared_device_eth: 1
