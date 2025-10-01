@@ -11,7 +11,8 @@ do
 done
 
 # Run lldpd daemon passing the interfaces for it to run on
-/usr/sbin/lldpd -dd -l -C $interfaces
+#/usr/sbin/lldpd -dd -l -C $interfaces
+/usr/sbin/lldpd -l -I $interfaces
 
 # Echo to logs container is ready - Sleep container indefinitly
 
