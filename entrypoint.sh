@@ -6,7 +6,7 @@ mapfile -t devices < <( lspci -nn | awk '/Ethernet/ && /Mellanox/ {print $1}' )
 # Iterate through the devices and find the real interface name and add it to interfaces string
 for i in "${devices[@]}"
 do
-  itmp=`grep PCI_SLOT_NAME /sys/class/net/*/device/uevent|grep $i|awk -F'/' {'print $5'}`
+  itmp=`grep PCI_SLOT_NAME /sys/class/net/*/device/uevent|awk -v pat="$i" -F'/' '$0 ~ pat {print $5}'`
   interfaces="${interfaces} ${itmp}"
 done
 
