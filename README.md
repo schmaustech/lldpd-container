@@ -43,7 +43,7 @@ EOF
 Now that we have our Dockerfile and lldpd.conf we can build the image.
 
 ~~~bash
-$ podman build -t quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.2 -f Dockerfile 
+$ podman build -t quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.5 -f Dockerfile 
 STEP 1/4: FROM registry.access.redhat.com/ubi9/ubi:latest
 STEP 2/4: COPY lldpd.conf /etc/lldpd.conf
 --> Using cache c75885685cd29c566a8132f28a007bbb26869e65b07bb0c9c3eed5b212b4bd2a
@@ -117,16 +117,16 @@ Installed:
 Complete!
 --> 07eeb7a24fa5
 STEP 4/4: ENTRYPOINT ["lldpd", "-dd", "-l"]
-COMMIT quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.2
+COMMIT quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.5
 --> d397bfab9139
-Successfully tagged quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.2
+Successfully tagged quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.5
 d397bfab91397214203ae4b8d47dc5947283ace9c78008e7c8437b2f66490a80
 ~~~
 
 Then push the newly built image to a registry.
 
 ~~~bash
-$ podman push quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.2
+$ podman push quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.5
 Getting image source signatures
 Copying blob 0c70878782cc done   | 
 Copying blob e1a406a53f5b skipped: already exists  
@@ -184,24 +184,16 @@ spec:
     metadata:
       labels:
         app: lldpd
-      annotations:
-        k8s.v1.cni.cncf.io/networks: rdmashared-net
     spec:
       serviceAccountName: lldp
+      hostNetwork: true
       containers:
         - name: lldpd-container
-          image: quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.2
+          image: quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.5
           securityContext:
             privileged: true
             capabilities:
               add: ["IPC_LOCK"]
-          resources:
-            limits:
-              #nvidia.com/gpu: 1
-              rdma/rdma_shared_device_eth: 1
-            requests:
-              #nvidia.com/gpu: 1
-              rdma/rdma_shared_device_eth: 1
 EOF
 ~~~
 
