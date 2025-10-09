@@ -200,8 +200,6 @@ spec:
           image: quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.5
           securityContext:
             privileged: true
-            capabilities:
-              add: ["IPC_LOCK"]
 EOF
 ~~~
 
