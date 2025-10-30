@@ -43,7 +43,7 @@ EOF
 Now that we have our Dockerfile and lldpd.conf we can build the image.
 
 ~~~bash
-$ ppodman build -t quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.5 -f Dockerfile 
+$ podman build -t quay.io/redhat_emp1/ecosys-nvidia/lldpd:0.0.5 -f Dockerfile 
 STEP 1/6: FROM registry.access.redhat.com/ubi9/ubi:latest
 STEP 2/6: COPY lldpd.conf /etc/lldpd.conf
 --> Using cache 1b1ed619ff75d4f4230524732252c1a074ad00f70f8d5976ad5dcde48f4c5397
