@@ -25,7 +25,7 @@ Next we need to create the following dockerfile we will use to build the contain
 $ cat <<EOF > Dockerfile 
 FROM registry.access.redhat.com/ubi9/ubi:latest
 COPY lldpd.conf /etc/lldpd.conf
-RUN dnf install -y lldpad lldpd tcpdump 
+RUN dnf install -y lldpad lldpd tcpdump procps-ng pciutils 
 ENTRYPOINT ["lldpd", "-dd", "-l"]
 EOF
 ~~~
