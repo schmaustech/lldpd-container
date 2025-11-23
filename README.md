@@ -213,7 +213,7 @@ daemonset.apps/lldpd-container created
 We can validate it is running by looking at the pods in the nvidia-network-operator namespace.
 
 ~~~bash
-1$ oc get pods -n nvidia-network-operator -l app=lldpd -o wide
+$ oc get pods -n nvidia-network-operator -l app=lldpd -o wide
 NAME                    READY   STATUS    RESTARTS   AGE   IP             NODE                                       NOMINATED NODE   READINESS GATES
 lldpd-container-gcx6j   1/1     Running   0          13m   10.128.3.149   nvd-srv-29.nvidia.eng.rdu2.dc.redhat.com   <none>           <none>
 lldpd-container-lwn7f   1/1     Running   0          13m   10.131.0.65    nvd-srv-30.nvidia.eng.rdu2.dc.redhat.com   <none>           <none>
